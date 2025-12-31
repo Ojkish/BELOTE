@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Belote</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Header & Scoreboard */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .total-score {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .team-score {
+            text-align: center;
+        }
+
+        .team-score h2 { font-size: 1rem; opacity: 0.9; margin-bottom: 5px; }
+        .team-score .big-number { font-size: 2.5rem; font-weight: bold; }
+
+        /* Input Section */
+        .controls { padding: 20px; background: #fff; border-bottom: 1px solid #eee; }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .team-input {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .team-input label { font-size: 0.85rem; color: #666; font-weight: bold; }
+        
+        input[type="number"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+        .belote-check {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .actions { display: flex; gap: 10px; }
+
+        button {
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-add { background: var(--accent); color: white; flex: 2; }
+        .btn-reset { background: #e74c3c; color: white; flex: 1; }
+
+        /* History List */
+        .history { padding: 0; list-style: none; max-height: 300px; overflow-y: auto; }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        
+        .history-item:nth-child(even) { background-color: #fafafa; }
+        .history-item span { width: 45%; text-align: center; }
+        .history-item .separator { width: 10%; color: #ccc; }
+
+        .empty-msg { text-align: center; padding: 20px; color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Belote Score</h1>
+        <div class="total-score">
+            <div class="team-score">
+                <h2 contenteditable="true" id="name1">Nous</h2>
+                <div class="big-number" id="total1">0</div>
+            </div>
+            <div class="team-score">
+                <h2 contenteditable="true" id="name2">Eux</h2>
+                <div class="big-number" id="total2">0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="input-group">
+            <div class="team-input">
+                <label for="score1">Points Nous</label>
+                <input type="number" id="score1" placeholder="0" min="0">
+                <label class="belote-check">
+                    <input type="checkbox" id="belote1"> Belote (+20)
+                </label>
+            </div>
+
+            <div class="team-input">
+                <label for="score2">Points Eux</label>
+                <input type="number" id="score2" placeholder="162" min="0">
+                <label class="belote-check">
+                    <input type="checkbox" id="belote2"> Belote (+20)
+                </label>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-add" onclick="addRound()">Valider la manche</button>
+            <button class="btn-reset" onclick="resetGame()">Zéro</button>
+        </div>
+    </div>
+
+    <ul class="history" id="historyList">
+        <li class="empty-msg">Aucune manche jouée</li>
+    </ul>
+</div>
+
+<script>
+    // Variables d'état
+    let globalScore1 = 0;
+    let globalScore2 = 0;
+    const MAX_POINTS = 162;
+
+    // Références DOM
+    const input1 = document.getElementById('score1');
+    const input2 = document.getElementById('score2');
+    const checkBelote1 = document.getElementById('belote1');
+    const checkBelote2 = document.getElementById('belote2');
+    
+    const displayTotal1 = document.getElementById('total1');
+    const displayTotal2 = document.getElementById('total2');
+    const historyList = document.getElementById('historyList');
+
+    // Calcul automatique : Quand on tape le score 1, le score 2 se calcule
+    input1.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        if (!isNaN(val) && val <= MAX_POINTS) {
+            input2.value = MAX_POINTS - val;
+        } else if (val > MAX_POINTS) {
+            // Empêcher de dépasser 162
+            this.value = MAX_POINTS;
+            input2.value = 0;
+        } else {
+            input2.value = '';
+        }
+    });
+
+    // Calcul inverse : Quand on tape le score 2
+    input2.addEventListener('input', function() {
+        const val = parseInt(this.value);
+        // On ne force pas le calcul inverse strict ici pour permettre
+        // les cas d'annonces (où le total fait plus de 162)
+        // Mais on peut faire une suggestion basique si le champ 1 est vide
+        if (!input1.value && !isNaN(val) && val <= MAX_POINTS) {
+            input1.value = MAX_POINTS - val;
+        }
+    });
+
+    function addRound() {
+        // Récupération des valeurs
+        let s1 = parseInt(input1.value) || 0;
+        let s2 = parseInt(input2.value) || 0;
+
+        // Ajout des belotes
+        if (checkBelote1.checked) s1 += 20;
+        if (checkBelote2.checked) s2 += 20;
+
+        // Validation simple
+        if (s1 === 0 && s2 === 0) return;
+
+        // Mise à jour des totaux globaux
+        globalScore1 += s1;
+        globalScore2 += s2;
+
+        // Mise à jour de l'affichage
+        updateDisplay();
+        addToHistory(s1, s2);
+
+        // Reset des inputs pour la prochaine manche
+        input1.value = '';
+        input2.value = '';
+        checkBelote1.checked = false;
+        checkBelote2.checked = false;
+        input1.focus();
+    }
+
+    function addToHistory(s1, s2) {
+        // Supprimer le message "vide" si c'est la première entrée
+        const emptyMsg = document.querySelector('.empty-msg');
+        if (emptyMsg) emptyMsg.remove();
+
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+            <span>+${s1}</span>
+            <span class="separator">-</span>
+            <span>+${s2}</span>
+        `;
+        // Ajouter en haut de la liste
+        historyList.prepend(li);
+    }
+
+    function updateDisplay() {
+        displayTotal1.textContent = globalScore1;
+        displayTotal2.textContent = globalScore2;
+    }
+
+    function resetGame() {
+        if(confirm("Voulez-vous vraiment remettre les scores à zéro ?")) {
+            globalScore1 = 0;
+            globalScore2 = 0;
+            updateDisplay();
+            historyList.innerHTML = '<li class="empty-msg">Nouvelle partie</li>';
+            input1.value = '';
+            input2.value = '';
+            checkBelote1.checked = false;
+            checkBelote2.checked = false;
+        }
+    }
+</script>
+
+</body>
+</html>
