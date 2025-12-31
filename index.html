@@ -3,147 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculateur Belote Pro</title>
+    <title>Belote Score - Race to 1000</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #27ae60;
-            --capot-color: #8e44ad;
-            --bg: #f4f7f6;
+            --primary: #1e293b;
+            --accent1: #3b82f6; /* Bleu pour NOUS */
+            --accent2: #ec4899; /* Rose/Rouge pour EUX */
+            --bg: #0f172a;
             --card-bg: #ffffff;
-            --text: #333;
+            --goal-color: #f59e0b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+        body { background-color: var(--bg); color: #1e293b; padding: 10px; display: flex; justify-content: center; min-height: 100vh; }
 
         .app-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 480px;
             background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 24px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
-        header { background: var(--primary); color: white; padding: 20px; text-align: center; }
-        .total-score { display: flex; justify-content: space-around; margin-top: 10px; }
-        .team-score { text-align: center; flex: 1; }
-        .team-score h2 { font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px; text-transform: uppercase; }
-        .team-score .big-number { font-size: 3rem; font-weight: 800; }
+        /* --- PROGRESSION HEADERS --- */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 20px;
+        }
 
+        .scores-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .team-title { font-size: 0.75rem; font-weight: 800; opacity: 0.6; letter-spacing: 2px; margin-bottom: 5px; }
+        .score-val { font-size: 3.2rem; font-weight: 900; line-height: 1; margin-bottom: 10px; }
+
+        /* Les deux barres de progression */
+        .progress-container {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #fill1 { background: var(--accent1); box-shadow: 0 0 10px var(--accent1); }
+        #fill2 { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+
+        .remaining { font-size: 0.7rem; margin-top: 8px; font-weight: 600; color: var(--goal-color); }
+
+        /* --- DASHBOARD STATS --- */
+        .diff-banner {
+            background: #f1f5f9;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #diff-text { color: #64748b; }
+
+        /* --- INPUTS --- */
         .controls { padding: 20px; }
-        .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
-        .team-input { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-
-        .input-header { display: flex; justify-content: space-between; align-items: center; }
-        .input-header label { font-size: 0.75rem; color: #999; font-weight: bold; }
-
-        .btn-capot-mini {
-            background: #f0f0f0; border: none; color: var(--capot-color);
-            font-size: 0.65rem; padding: 4px 10px; border-radius: 20px;
-            cursor: pointer; font-weight: 800;
-        }
+        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .input-box { flex: 1; }
+        
+        .capot-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: bold; color: #94a3b8; margin-bottom: 5px; }
+        .capot-btn { cursor: pointer; color: var(--accent1); border: none; background: none; font-size: 0.7rem; font-weight: 800; }
 
         input[type="number"] {
-            padding: 15px; border: 2px solid #eee; border-radius: 10px;
-            font-size: 1.8rem; text-align: center; width: 100%; font-weight: bold;
-            color: var(--primary); transition: border-color 0.2s;
+            width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 16px;
+            font-size: 1.8rem; text-align: center; font-weight: 800; transition: 0.2s;
         }
-        input[type="number"]:focus { outline: none; border-color: var(--accent); background: #fafffa; }
+        input[type="number"]:focus { border-color: var(--primary); outline: none; background: #f8fafc; }
 
         .belote-row { display: flex; justify-content: space-around; margin-bottom: 20px; }
-        .belote-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #666; }
-        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
+        .belote-opt { display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; color: #475569; }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
 
-        .actions { display: flex; gap: 10px; padding: 0 20px 20px; }
-        button.main-btn {
-            border: none; padding: 16px; border-radius: 10px; font-size: 1.1rem;
-            font-weight: bold; cursor: pointer; text-transform: uppercase; flex: 1;
-        }
-        .btn-add { background: var(--accent); color: white; flex: 2; }
-        .btn-reset { background: #fee; color: #e74c3c; border: 1px solid #fcc; }
+        .btn-group { display: flex; gap: 10px; padding: 0 20px 20px; }
+        .btn { border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-main { background: var(--primary); color: white; flex: 3; padding: 18px; text-transform: uppercase; }
+        .btn-undo { background: #e2e8f0; color: #475569; flex: 1; font-size: 1.5rem; }
+        .btn-reset { background: none; color: #94a3b8; width: 100%; padding: 10px; font-size: 0.7rem; text-decoration: underline; }
 
-        .history { list-style: none; max-height: 200px; overflow-y: auto; border-top: 1px solid #eee; }
-        .history-item {
-            display: flex; justify-content: space-between; padding: 12px 30px;
-            border-bottom: 1px solid #f9f9f9; font-size: 1.1rem;
-        }
-        .history-item span { width: 40%; text-align: center; }
-        .capot-badge { background: var(--capot-color); color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+        /* --- HISTORY --- */
+        .history-list { list-style: none; max-height: 160px; overflow-y: auto; border-top: 1px solid #f1f5f9; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px 40px; border-bottom: 1px solid #f8fafc; font-size: 0.95rem; }
+        .history-item:first-child { background: #f8fafc; font-weight: 800; color: #0f172a; }
+        .history-item span { width: 30%; text-align: center; }
+        .c-badge { color: #ec4899; font-weight: 900; margin-left: 4px; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <div class="total-score">
-            <div class="team-score">
-                <h2 contenteditable="true">NOUS</h2>
-                <div class="big-number" id="total1">0</div>
+        <div class="scores-grid">
+            <div class="team-card">
+                <div class="team-title" contenteditable="true">NOUS</div>
+                <div class="score-val" id="t1">0</div>
+                <div class="progress-container">
+                    <div id="fill1" class="progress-fill"></div>
+                </div>
+                <div class="remaining" id="rem1">1000 pts restants</div>
             </div>
-            <div class="team-score">
-                <h2 contenteditable="true">EUX</h2>
-                <div class="big-number" id="total2">0</div>
+            <div class="team-card">
+                <div class="team-title" contenteditable="true">EUX</div>
+                <div class="score-val" id="t2">0</div>
+                <div class="progress-container">
+                    <div id="fill2" class="progress-fill"></div>
+                </div>
+                <div class="remaining" id="rem2">1000 pts restants</div>
             </div>
         </div>
     </header>
 
+    <div class="diff-banner" id="diff-text">Égalité au départ</div>
+
     <div class="controls">
-        <div class="input-group">
-            <div class="team-input">
-                <div class="input-header"><label>Points</label><button class="btn-capot-mini" onclick="setCapot(1)">CAPOT</button></div>
-                <input type="number" id="score1" placeholder="0" inputmode="numeric">
+        <div class="input-row">
+            <div class="input-box">
+                <div class="capot-label">SCORE <span class="capot-btn" onclick="setCapot(1)">CAPOT</span></div>
+                <input type="number" id="s1" placeholder="0" inputmode="numeric">
             </div>
-            <div class="team-input">
-                <div class="input-header"><label>Points</label><button class="btn-capot-mini" onclick="setCapot(2)">CAPOT</button></div>
-                <input type="number" id="score2" placeholder="0" inputmode="numeric">
+            <div class="input-box">
+                <div class="capot-label">SCORE <span class="capot-btn" onclick="setCapot(2)">CAPOT</span></div>
+                <input type="number" id="s2" placeholder="0" inputmode="numeric">
             </div>
         </div>
         
         <div class="belote-row">
-            <label class="belote-check"><input type="checkbox" id="belote1"> Belote</label>
-            <label class="belote-check"><input type="checkbox" id="belote2"> Belote</label>
+            <label class="belote-opt"><input type="checkbox" id="b1"> Belote</label>
+            <label class="belote-opt"><input type="checkbox" id="b2"> Belote</label>
         </div>
     </div>
 
-    <div class="actions">
-        <button class="main-btn btn-add" onclick="addRound()">Valider</button>
-        <button class="main-btn btn-reset" onclick="resetGame()">Zéro</button>
+    <div class="btn-group">
+        <button class="btn btn-undo" onclick="undo()" id="undoBtn" disabled>↩</button>
+        <button class="btn btn-main" onclick="addRound()">Valider la donne</button>
     </div>
 
-    <ul class="history" id="historyList"></ul>
+    <button class="btn btn-reset" onclick="reset()">Réinitialiser le match</button>
+
+    <ul class="history-list" id="history"></ul>
 </div>
 
 <script>
-    let g1 = 0, g2 = 0;
-    const MAX = 162, CAPOT = 252;
-    const in1 = document.getElementById('score1'), in2 = document.getElementById('score2');
-    const b1 = document.getElementById('belote1'), b2 = document.getElementById('belote2');
+    let g1 = 0, g2 = 0, log = [];
+    const GOAL = 1000, MAX = 162, CAPOT = 252;
 
-    // LOGIQUE DE CALCUL DYNAMIQUE
-    function handleSync(source, target) {
+    const in1 = document.getElementById('s1'), in2 = document.getElementById('s2');
+    const chk1 = document.getElementById('b1'), chk2 = document.getElementById('b2');
+
+    // SYNC AUTO
+    function handleInput(e) {
+        const source = e.target;
+        const target = (source === in1) ? in2 : in1;
         const val = parseInt(source.value);
-        if (source.value === "") {
-            target.value = "";
-        } else if (!isNaN(val)) {
-            if (val >= MAX) {
-                // Si score >= 162 (ex: 252), l'adversaire tombe à 0
-                target.value = 0;
-            } else {
-                // Sinon calcul classique sur 162
-                target.value = MAX - val;
-            }
+        
+        if (source.value === "") target.value = "";
+        else if (!isNaN(val)) {
+            target.value = (val >= MAX) ? 0 : MAX - val;
         }
     }
+    in1.addEventListener('input', handleInput);
+    in2.addEventListener('input', handleInput);
 
-    in1.addEventListener('input', () => handleSync(in1, in2));
-    in2.addEventListener('input', () => handleSync(in2, in1));
-
-    // AUTO-SELECTION
-    [in1, in2].forEach(el => {
-        el.addEventListener('focus', () => setTimeout(() => el.select(), 50));
-        el.addEventListener('keydown', e => { if(e.key === 'Enter') addRound(); });
+    // AUTO SELECT & ENTER
+    [in1, in2].forEach(i => {
+        i.addEventListener('focus', () => setTimeout(() => i.select(), 50));
+        i.addEventListener('keydown', e => { if(e.key === 'Enter') addRound(); });
     });
 
     function setCapot(t) {
@@ -153,35 +194,66 @@
     }
 
     function addRound() {
-        let s1 = parseInt(in1.value) || 0, s2 = parseInt(in2.value) || 0;
+        let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
         if (in1.value === "" && in2.value === "") return;
 
-        const isC1 = s1 >= CAPOT, isC2 = s2 >= CAPOT;
-        if(b1.checked) s1 += 20; if(b2.checked) s2 += 20;
+        const isC1 = v1 >= CAPOT, isC2 = v2 >= CAPOT;
+        if(chk1.checked) v1 += 20; if(chk2.checked) v2 += 20;
 
-        g1 += s1; g2 += s2;
-        document.getElementById('total1').textContent = g1;
-        document.getElementById('total2').textContent = g2;
-
-        const li = document.createElement('li');
-        li.className = 'history-item';
-        li.innerHTML = `<span>+${s1}${isC1?'<b class="capot-badge">C</b>':''}</span><span>|</span><span>+${s2}${isC2?'<b class="capot-badge">C</b>':''}</span>`;
-        document.getElementById('historyList').prepend(li);
-
-        in1.value = ''; in2.value = ''; b1.checked = false; b2.checked = false;
+        log.push({v1, v2, isC1, isC2});
+        g1 += v1; g2 += v2;
+        
+        update();
+        in1.value = ""; in2.value = ""; 
+        chk1.checked = false; chk2.checked = false;
         in1.focus();
     }
 
-    function resetGame() {
-        if(confirm("Remettre à zéro ?")) {
-            g1 = 0; g2 = 0;
-            document.getElementById('total1').textContent = 0;
-            document.getElementById('total2').textContent = 0;
-            document.getElementById('historyList').innerHTML = '';
+    function undo() {
+        if (!log.length) return;
+        const last = log.pop();
+        g1 -= last.v1; g2 -= last.v2;
+        update();
+    }
+
+    function update() {
+        // Textes
+        document.getElementById('t1').textContent = g1;
+        document.getElementById('t2').textContent = g2;
+        document.getElementById('rem1').textContent = Math.max(0, GOAL - g1) + " pts restants";
+        document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " pts restants";
+
+        // Barres de progression (bridées à 100%)
+        document.getElementById('fill1').style.width = Math.min(100, (g1/GOAL)*100) + "%";
+        document.getElementById('fill2').style.width = Math.min(100, (g2/GOAL)*100) + "%";
+
+        // Écart
+        const diff = Math.abs(g1 - g2);
+        const banner = document.getElementById('diff-text');
+        if (g1 === g2) banner.textContent = "Égalité parfaite";
+        else banner.innerHTML = `Écart : <span style="color:var(--primary)">${diff} points</span> (${g1 > g2 ? 'NOUS menons' : 'EUX mènent'})`;
+
+        // Historique
+        const hUI = document.getElementById('history');
+        hUI.innerHTML = '';
+        [...log].reverse().forEach(r => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `<span>+${r.v1}${r.isC1?'<b class="c-badge">CAPOT</b>':''}</span><span>/</span><span>+${r.v2}${r.isC2?'<b class="c-badge">CAPOT</b>':''}</span>`;
+            hUI.appendChild(li);
+        });
+
+        document.getElementById('undoBtn').disabled = log.length === 0;
+    }
+
+    function reset() {
+        if(confirm("Nouvelle partie ?")) {
+            g1 = 0; g2 = 0; log = [];
+            update();
             in1.focus();
         }
     }
-    
+
     window.onload = () => in1.focus();
 </script>
 </body>
