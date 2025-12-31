@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Party - Alerte Sécurisée</title>
+    <title>Belote Party - No Keyboard Pop</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -36,8 +36,7 @@
         #fill2 { background: var(--eux-grad); }
         .remaining { font-size: 0.75rem; margin-top: 10px; font-weight: 700; color: #636e72; text-align: center;}
 
-        /* MESSAGE D'ALERTE */
-        .info-banner { background: #f9f9f9; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: 600; color: #636e72; min-height: 40px; transition: all 0.3s; }
+        .info-banner { background: #f9f9f9; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: 600; color: #636e72; min-height: 40px; }
         .alert-active { color: var(--error-color) !important; background: #fff2f2; }
 
         .controls { padding: 25px 20px; }
@@ -51,7 +50,6 @@
             color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; 
         }
 
-        /* ANIMATION ERREUR */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
@@ -64,13 +62,7 @@
             transition: all 0.2s; -webkit-appearance: none;
         }
         input[type="number"]:focus { border-color: #74b9ff; outline: none; background: white; }
-        
-        .input-error { 
-            border-color: var(--error-color) !important; 
-            background: #fffafa !important; 
-            color: var(--error-color) !important;
-            animation: shake 0.2s ease-in-out 0s 2;
-        }
+        .input-error { border-color: var(--error-color) !important; background: #fffafa !important; animation: shake 0.2s ease-in-out 2; }
 
         .belote-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
         .belote-opt { display: flex; align-items: center; gap: 10px; font-weight: 800; cursor: pointer; color: #636e72; }
@@ -83,7 +75,6 @@
         
         .history-list { list-style: none; max-height: 180px; overflow-y: auto; background: #fafbfc; }
         .history-item { display: flex; justify-content: space-between; padding: 15px 45px; border-bottom: 1px solid #f1f2f6; font-size: 1rem; color: #636e72; }
-        .history-item:first-child { background: white; font-weight: 900; color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -91,18 +82,8 @@
 <div class="app-container">
     <header>
         <div class="scores-grid">
-            <div class="team-card">
-                <div class="team-title">NOUS</div>
-                <div class="score-val" id="t1">0</div>
-                <div class="progress-box"><div id="fill1" class="progress-fill"></div></div>
-                <div class="remaining" id="rem1">1000 restants</div>
-            </div>
-            <div class="team-card">
-                <div class="team-title">EUX</div>
-                <div class="score-val" id="t2">0</div>
-                <div class="progress-box"><div id="fill2" class="progress-fill"></div></div>
-                <div class="remaining" id="rem2">1000 restants</div>
-            </div>
+            <div class="team-card"><div class="team-title">NOUS</div><div class="score-val" id="t1">0</div><div class="progress-box"><div id="fill1" class="progress-fill"></div></div><div class="remaining" id="rem1">1000 restants</div></div>
+            <div class="team-card"><div class="team-title">EUX</div><div class="score-val" id="t2">0</div><div class="progress-box"><div id="fill2" class="progress-fill"></div></div><div class="remaining" id="rem2">1000 restants</div></div>
         </div>
     </header>
 
@@ -110,16 +91,9 @@
 
     <div class="controls">
         <div class="input-row">
-            <div class="input-box">
-                <div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(1)">CAPOT</button></div>
-                <input type="number" id="s1" placeholder="0" inputmode="numeric" autocomplete="off">
-            </div>
-            <div class="input-box">
-                <div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(2)">CAPOT</button></div>
-                <input type="number" id="s2" placeholder="0" inputmode="numeric" autocomplete="off">
-            </div>
+            <div class="input-box"><div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(1)">CAPOT</button></div><input type="number" id="s1" placeholder="0" inputmode="numeric"></div>
+            <div class="input-box"><div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(2)">CAPOT</button></div><input type="number" id="s2" placeholder="0" inputmode="numeric"></div>
         </div>
-        
         <div class="belote-row">
             <label class="belote-opt"><input type="checkbox" id="b1"> Belote</label>
             <label class="belote-opt"><input type="checkbox" id="b2"> Belote</label>
@@ -128,18 +102,16 @@
 
     <div class="btn-group">
         <button class="btn-undo" onclick="undo()" id="undoBtn" disabled>↩</button>
-        <button class="btn-main" onclick="addRound()">Valider</button>
+        <button class="btn-main" id="validerBtn" onclick="addRound()">Valider</button>
     </div>
 
     <button class="btn-reset" onclick="reset()">REPRENDRE À ZÉRO</button>
-
     <ul class="history-list" id="history"></ul>
 </div>
 
 <script>
     let g1 = 0, g2 = 0, log = [];
     const GOAL = 1000, MAX = 162, CAPOT = 252;
-
     const in1 = document.getElementById('s1'), in2 = document.getElementById('s2');
     const chk1 = document.getElementById('b1'), chk2 = document.getElementById('b2');
     const banner = document.getElementById('diff-text');
@@ -148,27 +120,11 @@
         const source = e.target;
         const target = (source === in1) ? in2 : in1;
         let val = parseInt(source.value);
-
         if (document.activeElement === source) {
-            if (source.value === "") {
-                target.value = "";
-                source.classList.remove('input-error');
-                updateBanner();
-            } else if (!isNaN(val)) {
-                // DETECTION ERREUR
-                if (val > MAX && val !== CAPOT) {
-                    source.classList.add('input-error');
-                    banner.innerHTML = "⚠️ Score max hors capot : 162 !";
-                    banner.classList.add('alert-active');
-                    // On ne bloque pas la frappe mais on affiche l'erreur
-                } else {
-                    source.classList.remove('input-error');
-                    banner.classList.remove('alert-active');
-                    updateBanner();
-                    
-                    if (val === CAPOT) target.value = 0;
-                    else target.value = MAX - val;
-                }
+            if (source.value === "") { target.value = ""; source.classList.remove('input-error'); updateBanner(); }
+            else if (!isNaN(val)) {
+                if (val > MAX && val !== CAPOT) { source.classList.add('input-error'); banner.innerHTML = "⚠️ Max 162 ou Capot !"; banner.classList.add('alert-active'); }
+                else { source.classList.remove('input-error'); banner.classList.remove('alert-active'); updateBanner(); target.value = (val === CAPOT) ? 0 : MAX - val; }
             }
         }
     }
@@ -176,25 +132,28 @@
     in1.addEventListener('input', handleInput);
     in2.addEventListener('input', handleInput);
 
+    // Empêche le clavier de s'ouvrir sur le bouton Valider
     function addRound() {
-        let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
-        
-        // Bloquer la validation si score invalide
-        if ((v1 > MAX && v1 !== CAPOT) || (v2 > MAX && v2 !== CAPOT)) {
-            alert("Veuillez corriger le score (Max 162 ou Capot 252)");
-            return;
+        // 1. On retire le focus de n'importe quel champ actif immédiatement
+        if (document.activeElement) {
+            document.activeElement.blur();
         }
 
+        let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
+        if ((v1 > MAX && v1 !== CAPOT) || (v2 > MAX && v2 !== CAPOT)) return;
         if (in1.value === "" && in2.value === "") return;
+
         const isC1 = v1 >= CAPOT, isC2 = v2 >= CAPOT;
         if(chk1.checked) v1 += 20; if(chk2.checked) v2 += 20;
         
-        log.push({v1, v2, isC1, isC2});
+        log.push({v1, v2});
         g1 += v1; g2 += v2;
         update();
+        
         in1.value = ""; in2.value = ""; 
         chk1.checked = false; chk2.checked = false;
-        in1.focus();
+        
+        // On ne fait PAS de in1.focus() ici pour éviter la réouverture du clavier
     }
 
     function updateBanner() {
@@ -210,9 +169,7 @@
         document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " restants";
         document.getElementById('fill1').style.width = Math.min(100, (g1/GOAL)*100) + "%";
         document.getElementById('fill2').style.width = Math.min(100, (g2/GOAL)*100) + "%";
-        
         updateBanner();
-        
         const hUI = document.getElementById('history');
         hUI.innerHTML = '';
         [...log].reverse().forEach(r => {
@@ -224,22 +181,11 @@
         document.getElementById('undoBtn').disabled = log.length === 0;
     }
 
-    function undo() {
-        if (!log.length) return;
-        log.pop();
-        g1 = log.reduce((a, b) => a + b.v1, 0);
-        g2 = log.reduce((a, b) => a + b.v2, 0);
-        update();
-    }
+    function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); update(); } }
+    function reset() { if(confirm("Effacer les scores ?")) { g1 = 0; g2 = 0; log = []; update(); } }
 
-    function reset() {
-        if(confirm("Effacer les scores ?")) {
-            g1 = 0; g2 = 0; log = [];
-            update();
-            in1.focus();
-        }
-    }
-    window.onload = () => in1.focus();
+    // On ne met le focus qu'au chargement initial
+    window.onload = () => { if(window.innerWidth > 768) in1.focus(); };
 </script>
 </body>
 </html>
