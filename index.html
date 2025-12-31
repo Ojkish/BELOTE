@@ -3,107 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Score - Race to 1000</title>
+    <title>Belote Party !</title>
     <style>
         :root {
-            --primary: #1e293b;
-            --accent1: #3b82f6; /* Bleu pour NOUS */
-            --accent2: #ec4899; /* Rose/Rouge pour EUX */
-            --bg: #0f172a;
-            --card-bg: #ffffff;
-            --goal-color: #f59e0b;
+            --nous-color: #00d2ff; /* Turquoise vif */
+            --eux-color: #ff6b6b;  /* Corail corail */
+            --nous-grad: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --eux-grad: linear-gradient(135deg, #ff6b6b 0%, #ee0979 100%);
+            --bg-light: #fdfbfb;
+            --text-main: #2d3436;
+            --win-color: #feca57; /* Jaune soleil */
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-        body { background-color: var(--bg); color: #1e293b; padding: 10px; display: flex; justify-content: center; min-height: 100vh; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        
+        body { 
+            background: #f0f2f5; 
+            color: var(--text-main); 
+            padding: 10px; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh; 
+        }
 
         .app-container {
             width: 100%;
-            max-width: 480px;
-            background: var(--card-bg);
-            border-radius: 24px;
+            max-width: 450px;
+            background: white;
+            border-radius: 30px;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 6px solid white;
         }
 
-        /* --- PROGRESSION HEADERS --- */
+        /* --- HEADER JOYEUX --- */
         header {
-            background: var(--primary);
-            color: white;
-            padding: 25px 20px;
+            padding: 30px 20px;
+            background: var(--bg-light);
+            border-bottom: 2px solid #f1f2f6;
         }
 
         .scores-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            text-align: center;
         }
 
-        .team-title { font-size: 0.75rem; font-weight: 800; opacity: 0.6; letter-spacing: 2px; margin-bottom: 5px; }
-        .score-val { font-size: 3.2rem; font-weight: 900; line-height: 1; margin-bottom: 10px; }
+        .team-title { 
+            font-size: 0.8rem; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            color: #b2bec3;
+        }
 
-        /* Les deux barres de progression */
-        .progress-container {
-            height: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
+        .score-val { 
+            font-size: 3.5rem; 
+            font-weight: 900; 
+            line-height: 1; 
+            margin-bottom: 12px;
+        }
+        #t1 { color: #0984e3; }
+        #t2 { color: #d63031; }
+
+        /* --- JAUGES DE PROGRESSION --- */
+        .progress-box {
+            height: 14px;
+            background: #dfe6e9;
+            border-radius: 50px;
             overflow: hidden;
-            margin-top: 10px;
+            position: relative;
         }
         .progress-fill {
             height: 100%;
             width: 0%;
-            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 50px;
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #fill1 { background: var(--accent1); box-shadow: 0 0 10px var(--accent1); }
-        #fill2 { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+        #fill1 { background: var(--nous-grad); box-shadow: 0 3px 10px rgba(0,210,255,0.4); }
+        #fill2 { background: var(--eux-grad); box-shadow: 0 3px 10px rgba(255,107,107,0.4); }
 
-        .remaining { font-size: 0.7rem; margin-top: 8px; font-weight: 600; color: var(--goal-color); }
+        .remaining { 
+            font-size: 0.75rem; 
+            margin-top: 10px; 
+            font-weight: 700; 
+            color: #636e72; 
+        }
 
-        /* --- DASHBOARD STATS --- */
-        .diff-banner {
-            background: #f1f5f9;
-            padding: 8px;
+        /* --- BANNIÈRE ÉCART --- */
+        .info-banner {
+            background: #f9f9f9;
+            padding: 10px;
             text-align: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #636e72;
         }
-        #diff-text { color: #64748b; }
+        .info-banner b { color: var(--text-main); font-size: 1.1rem; }
 
         /* --- INPUTS --- */
-        .controls { padding: 20px; }
-        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .controls { padding: 25px 20px; }
+        .input-row { display: flex; gap: 20px; margin-bottom: 20px; }
         .input-box { flex: 1; }
         
-        .capot-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: bold; color: #94a3b8; margin-bottom: 5px; }
-        .capot-btn { cursor: pointer; color: var(--accent1); border: none; background: none; font-size: 0.7rem; font-weight: 800; }
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .label-row label { font-size: 0.7rem; font-weight: 800; color: #b2bec3; }
+        .capot-btn { 
+            background: #f1f2f6; 
+            border: none; 
+            padding: 4px 8px; 
+            border-radius: 8px; 
+            color: #636e72; 
+            font-size: 0.6rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+        }
 
         input[type="number"] {
-            width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 16px;
-            font-size: 1.8rem; text-align: center; font-weight: 800; transition: 0.2s;
+            width: 100%; 
+            padding: 15px; 
+            border: 3px solid #f1f2f6; 
+            border-radius: 20px;
+            font-size: 2rem; 
+            text-align: center; 
+            font-weight: 900; 
+            color: var(--text-main);
+            transition: all 0.3s;
         }
-        input[type="number"]:focus { border-color: var(--primary); outline: none; background: #f8fafc; }
+        input[type="number"]:focus { 
+            border-color: #74b9ff; 
+            outline: none; 
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
 
-        .belote-row { display: flex; justify-content: space-around; margin-bottom: 20px; }
-        .belote-opt { display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; color: #475569; }
-        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
+        .belote-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
+        .belote-opt { display: flex; align-items: center; gap: 10px; font-weight: 800; cursor: pointer; color: #636e72; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: #00b894; }
 
-        .btn-group { display: flex; gap: 10px; padding: 0 20px 20px; }
-        .btn { border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-main { background: var(--primary); color: white; flex: 3; padding: 18px; text-transform: uppercase; }
-        .btn-undo { background: #e2e8f0; color: #475569; flex: 1; font-size: 1.5rem; }
-        .btn-reset { background: none; color: #94a3b8; width: 100%; padding: 10px; font-size: 0.7rem; text-decoration: underline; }
+        /* --- BOUTONS --- */
+        .btn-group { display: flex; gap: 12px; padding: 0 20px 20px; }
+        button { border: none; cursor: pointer; transition: 0.2s; border-radius: 18px; }
+        
+        .btn-main { 
+            background: #00b894; 
+            color: white; 
+            flex: 3; 
+            padding: 20px; 
+            font-size: 1.1rem; 
+            font-weight: 900; 
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,184,148,0.3);
+        }
+        .btn-undo { background: #ffeaa7; color: #d6a000; flex: 1; font-size: 1.5rem; }
+        .btn-reset { 
+            background: none; 
+            color: #b2bec3; 
+            width: 100%; 
+            padding: 15px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-decoration: none; 
+            letter-spacing: 1px;
+        }
+        button:active { transform: translateY(2px); }
 
-        /* --- HISTORY --- */
-        .history-list { list-style: none; max-height: 160px; overflow-y: auto; border-top: 1px solid #f1f5f9; }
-        .history-item { display: flex; justify-content: space-between; padding: 12px 40px; border-bottom: 1px solid #f8fafc; font-size: 0.95rem; }
-        .history-item:first-child { background: #f8fafc; font-weight: 800; color: #0f172a; }
-        .history-item span { width: 30%; text-align: center; }
-        .c-badge { color: #ec4899; font-weight: 900; margin-left: 4px; font-size: 0.7rem; }
+        /* --- HISTORIQUE --- */
+        .history-list { list-style: none; max-height: 180px; overflow-y: auto; background: #fafbfc; }
+        .history-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 15px 45px; 
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 1rem;
+            color: #636e72;
+        }
+        .history-item:first-child { background: white; font-weight: 900; color: var(--text-main); }
+        .c-badge { color: #fd79a8; font-size: 0.6rem; background: #fff0f6; padding: 2px 6px; border-radius: 5px; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -114,32 +191,32 @@
             <div class="team-card">
                 <div class="team-title" contenteditable="true">NOUS</div>
                 <div class="score-val" id="t1">0</div>
-                <div class="progress-container">
+                <div class="progress-box">
                     <div id="fill1" class="progress-fill"></div>
                 </div>
-                <div class="remaining" id="rem1">1000 pts restants</div>
+                <div class="remaining" id="rem1">1000 restants</div>
             </div>
             <div class="team-card">
                 <div class="team-title" contenteditable="true">EUX</div>
                 <div class="score-val" id="t2">0</div>
-                <div class="progress-container">
+                <div class="progress-box">
                     <div id="fill2" class="progress-fill"></div>
                 </div>
-                <div class="remaining" id="rem2">1000 pts restants</div>
+                <div class="remaining" id="rem2">1000 restants</div>
             </div>
         </div>
     </header>
 
-    <div class="diff-banner" id="diff-text">Égalité au départ</div>
+    <div class="info-banner" id="diff-text">C'est parti !</div>
 
     <div class="controls">
         <div class="input-row">
             <div class="input-box">
-                <div class="capot-label">SCORE <span class="capot-btn" onclick="setCapot(1)">CAPOT</span></div>
+                <div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(1)">CAPOT</button></div>
                 <input type="number" id="s1" placeholder="0" inputmode="numeric">
             </div>
             <div class="input-box">
-                <div class="capot-label">SCORE <span class="capot-btn" onclick="setCapot(2)">CAPOT</span></div>
+                <div class="label-row"><label>POINTS</label><button class="capot-btn" onclick="setCapot(2)">CAPOT</button></div>
                 <input type="number" id="s2" placeholder="0" inputmode="numeric">
             </div>
         </div>
@@ -151,11 +228,11 @@
     </div>
 
     <div class="btn-group">
-        <button class="btn btn-undo" onclick="undo()" id="undoBtn" disabled>↩</button>
-        <button class="btn btn-main" onclick="addRound()">Valider la donne</button>
+        <button class="btn-undo" onclick="undo()" id="undoBtn" disabled>↩</button>
+        <button class="btn-main" onclick="addRound()">Valider</button>
     </div>
 
-    <button class="btn btn-reset" onclick="reset()">Réinitialiser le match</button>
+    <button class="btn-reset" onclick="reset()">REPRENDRE À ZÉRO</button>
 
     <ul class="history-list" id="history"></ul>
 </div>
@@ -172,16 +249,13 @@
         const source = e.target;
         const target = (source === in1) ? in2 : in1;
         const val = parseInt(source.value);
-        
         if (source.value === "") target.value = "";
-        else if (!isNaN(val)) {
-            target.value = (val >= MAX) ? 0 : MAX - val;
-        }
+        else if (!isNaN(val)) target.value = (val >= MAX) ? 0 : MAX - val;
     }
     in1.addEventListener('input', handleInput);
     in2.addEventListener('input', handleInput);
 
-    // AUTO SELECT & ENTER
+    // AUTO SELECT
     [in1, in2].forEach(i => {
         i.addEventListener('focus', () => setTimeout(() => i.select(), 50));
         i.addEventListener('keydown', e => { if(e.key === 'Enter') addRound(); });
@@ -196,13 +270,10 @@
     function addRound() {
         let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
         if (in1.value === "" && in2.value === "") return;
-
         const isC1 = v1 >= CAPOT, isC2 = v2 >= CAPOT;
         if(chk1.checked) v1 += 20; if(chk2.checked) v2 += 20;
-
         log.push({v1, v2, isC1, isC2});
         g1 += v1; g2 += v2;
-        
         update();
         in1.value = ""; in2.value = ""; 
         chk1.checked = false; chk2.checked = false;
@@ -217,43 +288,34 @@
     }
 
     function update() {
-        // Textes
         document.getElementById('t1').textContent = g1;
         document.getElementById('t2').textContent = g2;
-        document.getElementById('rem1').textContent = Math.max(0, GOAL - g1) + " pts restants";
-        document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " pts restants";
-
-        // Barres de progression (bridées à 100%)
+        document.getElementById('rem1').textContent = Math.max(0, GOAL - g1) + " restants";
+        document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " restants";
         document.getElementById('fill1').style.width = Math.min(100, (g1/GOAL)*100) + "%";
         document.getElementById('fill2').style.width = Math.min(100, (g2/GOAL)*100) + "%";
-
-        // Écart
         const diff = Math.abs(g1 - g2);
         const banner = document.getElementById('diff-text');
-        if (g1 === g2) banner.textContent = "Égalité parfaite";
-        else banner.innerHTML = `Écart : <span style="color:var(--primary)">${diff} points</span> (${g1 > g2 ? 'NOUS menons' : 'EUX mènent'})`;
-
-        // Historique
+        if (g1 === g2) banner.textContent = "Égalité !";
+        else banner.innerHTML = `Écart : <b>${diff} pts</b> (${g1 > g2 ? 'NOUS devant' : 'EUX devant'})`;
         const hUI = document.getElementById('history');
         hUI.innerHTML = '';
         [...log].reverse().forEach(r => {
             const li = document.createElement('li');
             li.className = 'history-item';
-            li.innerHTML = `<span>+${r.v1}${r.isC1?'<b class="c-badge">CAPOT</b>':''}</span><span>/</span><span>+${r.v2}${r.isC2?'<b class="c-badge">CAPOT</b>':''}</span>`;
+            li.innerHTML = `<span>+${r.v1}${r.isC1?'<b class="c-badge">CAPOT</b>':''}</span><span>|</span><span>+${r.v2}${r.isC2?'<b class="c-badge">CAPOT</b>':''}</span>`;
             hUI.appendChild(li);
         });
-
         document.getElementById('undoBtn').disabled = log.length === 0;
     }
 
     function reset() {
-        if(confirm("Nouvelle partie ?")) {
+        if(confirm("Effacer les scores ?")) {
             g1 = 0; g2 = 0; log = [];
             update();
             in1.focus();
         }
     }
-
     window.onload = () => in1.focus();
 </script>
 </body>
