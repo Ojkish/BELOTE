@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculateur Belote Pro</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --capot-color: #8e44ad;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; display: flex; justify-content: center; }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        .total-score { display: flex; justify-content: space-around; margin-top: 10px; }
+        .team-score { text-align: center; flex: 1; }
+        .team-score h2 { font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px; text-transform: uppercase; }
+        .team-score .big-number { font-size: 3rem; font-weight: 800; }
+
+        .controls { padding: 20px; }
+        .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
+        .team-input { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+
+        .input-header { display: flex; justify-content: space-between; align-items: center; }
+        .input-header label { font-size: 0.75rem; color: #999; font-weight: bold; }
+
+        .btn-capot-mini {
+            background: #f0f0f0; border: none; color: var(--capot-color);
+            font-size: 0.65rem; padding: 4px 10px; border-radius: 20px;
+            cursor: pointer; font-weight: 800;
+        }
+
+        input[type="number"] {
+            padding: 15px; border: 2px solid #eee; border-radius: 10px;
+            font-size: 1.8rem; text-align: center; width: 100%; font-weight: bold;
+            color: var(--primary); transition: border-color 0.2s;
+        }
+        input[type="number"]:focus { outline: none; border-color: var(--accent); background: #fafffa; }
+
+        .belote-row { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .belote-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #666; }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
+
+        .actions { display: flex; gap: 10px; padding: 0 20px 20px; }
+        button.main-btn {
+            border: none; padding: 16px; border-radius: 10px; font-size: 1.1rem;
+            font-weight: bold; cursor: pointer; text-transform: uppercase; flex: 1;
+        }
+        .btn-add { background: var(--accent); color: white; flex: 2; }
+        .btn-reset { background: #fee; color: #e74c3c; border: 1px solid #fcc; }
+
+        .history { list-style: none; max-height: 200px; overflow-y: auto; border-top: 1px solid #eee; }
+        .history-item {
+            display: flex; justify-content: space-between; padding: 12px 30px;
+            border-bottom: 1px solid #f9f9f9; font-size: 1.1rem;
+        }
+        .history-item span { width: 40%; text-align: center; }
+        .capot-badge { background: var(--capot-color); color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="total-score">
+            <div class="team-score">
+                <h2 contenteditable="true">NOUS</h2>
+                <div class="big-number" id="total1">0</div>
+            </div>
+            <div class="team-score">
+                <h2 contenteditable="true">EUX</h2>
+                <div class="big-number" id="total2">0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="input-group">
+            <div class="team-input">
+                <div class="input-header"><label>Points</label><button class="btn-capot-mini" onclick="setCapot(1)">CAPOT</button></div>
+                <input type="number" id="score1" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="team-input">
+                <div class="input-header"><label>Points</label><button class="btn-capot-mini" onclick="setCapot(2)">CAPOT</button></div>
+                <input type="number" id="score2" placeholder="0" inputmode="numeric">
+            </div>
+        </div>
+        
+        <div class="belote-row">
+            <label class="belote-check"><input type="checkbox" id="belote1"> Belote</label>
+            <label class="belote-check"><input type="checkbox" id="belote2"> Belote</label>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="main-btn btn-add" onclick="addRound()">Valider</button>
+        <button class="main-btn btn-reset" onclick="resetGame()">Zéro</button>
+    </div>
+
+    <ul class="history" id="historyList"></ul>
+</div>
+
+<script>
+    let g1 = 0, g2 = 0;
+    const MAX = 162, CAPOT = 252;
+    const in1 = document.getElementById('score1'), in2 = document.getElementById('score2');
+    const b1 = document.getElementById('belote1'), b2 = document.getElementById('belote2');
+
+    // LOGIQUE DE CALCUL DYNAMIQUE
+    function handleSync(source, target) {
+        const val = parseInt(source.value);
+        if (source.value === "") {
+            target.value = "";
+        } else if (!isNaN(val)) {
+            if (val >= MAX) {
+                // Si score >= 162 (ex: 252), l'adversaire tombe à 0
+                target.value = 0;
+            } else {
+                // Sinon calcul classique sur 162
+                target.value = MAX - val;
+            }
+        }
+    }
+
+    in1.addEventListener('input', () => handleSync(in1, in2));
+    in2.addEventListener('input', () => handleSync(in2, in1));
+
+    // AUTO-SELECTION
+    [in1, in2].forEach(el => {
+        el.addEventListener('focus', () => setTimeout(() => el.select(), 50));
+        el.addEventListener('keydown', e => { if(e.key === 'Enter') addRound(); });
+    });
+
+    function setCapot(t) {
+        if(t===1) { in1.value = CAPOT; in2.value = 0; }
+        else { in1.value = 0; in2.value = CAPOT; }
+        in1.focus();
+    }
+
+    function addRound() {
+        let s1 = parseInt(in1.value) || 0, s2 = parseInt(in2.value) || 0;
+        if (in1.value === "" && in2.value === "") return;
+
+        const isC1 = s1 >= CAPOT, isC2 = s2 >= CAPOT;
+        if(b1.checked) s1 += 20; if(b2.checked) s2 += 20;
+
+        g1 += s1; g2 += s2;
+        document.getElementById('total1').textContent = g1;
+        document.getElementById('total2').textContent = g2;
+
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `<span>+${s1}${isC1?'<b class="capot-badge">C</b>':''}</span><span>|</span><span>+${s2}${isC2?'<b class="capot-badge">C</b>':''}</span>`;
+        document.getElementById('historyList').prepend(li);
+
+        in1.value = ''; in2.value = ''; b1.checked = false; b2.checked = false;
+        in1.focus();
+    }
+
+    function resetGame() {
+        if(confirm("Remettre à zéro ?")) {
+            g1 = 0; g2 = 0;
+            document.getElementById('total1').textContent = 0;
+            document.getElementById('total2').textContent = 0;
+            document.getElementById('historyList').innerHTML = '';
+            in1.focus();
+        }
+    }
+    
+    window.onload = () => in1.focus();
+</script>
+</body>
+</html>
