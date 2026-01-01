@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Party - Mode Championnat</title>
+    <title>Belote Party - Victoire Visible</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -24,6 +24,9 @@
             overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 6px solid white;
             position: relative;
         }
+
+        /* Effet de flou quand la victoire est affichée */
+        .blur-active { filter: blur(4px); pointer-events: none; }
 
         header { padding: 30px 20px; background: var(--bg-light); border-bottom: 2px solid #f1f2f6; }
         .scores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -46,21 +49,30 @@
 
         .info-banner { background: #f9f9f9; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: 600; color: #636e72; min-height: 40px; }
 
+        /* NOUVEL ÉCRAN DE VICTOIRE (MODAL) */
+        #win-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.1);
+        }
+        .win-card {
+            background: white; padding: 40px; border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            text-align: center; width: 85%; max-width: 350px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .win-title { font-size: 0.9rem; font-weight: 900; color: #b2bec3; margin-bottom: 5px; }
+        .win-name { font-size: 2.2rem; font-weight: 900; color: #00b894; line-height: 1.1; margin-bottom: 25px; }
+        .win-btn { background: var(--text-main); color: white; padding: 18px 30px; border-radius: 15px; border: none; font-weight: 900; text-transform: uppercase; width: 100%; cursor: pointer; }
+
         .controls { padding: 25px 20px; }
         .input-row { display: flex; gap: 20px; margin-bottom: 10px; }
         .input-box { flex: 1; }
         .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .label-row label { font-size: 0.65rem; font-weight: 800; color: #b2bec3; }
-
         .capot-btn { background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-6px); }
-            80% { transform: translateX(6px); }
-        }
 
         input[type="number"] {
             width: 100%; padding: 15px; border: 3px solid #f1f2f6; border-radius: 20px;
@@ -81,29 +93,20 @@
         
         .history-list { list-style: none; max-height: 180px; overflow-y: auto; background: #fafbfc; border-top: 1px solid #f1f2f6; }
         .history-item { display: flex; justify-content: space-between; padding: 15px 45px; border-bottom: 1px solid #f1f2f6; font-size: 1rem; color: #636e72; }
-
-        /* OVERLAY VICTOIRE */
-        #win-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95); z-index: 100;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 40px;
-        }
-        .win-title { font-size: 1.2rem; font-weight: 900; color: #b2bec3; margin-bottom: 10px; }
-        .win-name { font-size: 3rem; font-weight: 900; color: #00b894; line-height: 1.1; margin-bottom: 30px; }
-        .win-btn { background: var(--text-main); color: white; padding: 20px 40px; border-radius: 20px; border: none; font-weight: 900; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="app-container" id="main-cont">
-    <div id="win-overlay">
-        <div class="win-title">LA PARTIE EST FINIE !</div>
+<div id="win-overlay">
+    <div class="win-card">
+        <div class="win-title">🏆 VICTOIRE 🏆</div>
         <div class="win-name" id="winner-text">NOUS GAGNONS</div>
-        <button class="win-btn" onclick="reset()">REJOUER UNE PARTIE</button>
+        <button class="win-btn" onclick="reset()">NOUVELLE PARTIE</button>
     </div>
+</div>
 
-    <header id="app-top">
+<div class="app-container" id="app-body">
+    <header id="app-header">
         <div class="scores-grid">
             <div class="team-card">
                 <div class="team-title" id="name1" contenteditable="true" spellcheck="false">NOUS</div>
@@ -156,18 +159,17 @@
     const name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
     const banner = document.getElementById('diff-text');
     const overlay = document.getElementById('win-overlay');
+    const appBody = document.getElementById('app-body');
 
     function toggleBelote(team) {
         if (team === 1 && chk1.checked) chk2.checked = false;
         if (team === 2 && chk2.checked) chk1.checked = false;
-        if ("vibrate" in navigator) navigator.vibrate(10);
     }
 
     function triggerError(el) {
-        el.classList.remove('input-error');
-        void el.offsetWidth;
         el.classList.add('input-error');
         if ("vibrate" in navigator) navigator.vibrate([50, 30, 50]);
+        setTimeout(() => el.classList.remove('input-error'), 400);
     }
 
     function addRound() {
@@ -175,8 +177,7 @@
         let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
         
         if ((v1 > MAX && v1 !== CAPOT) || (v2 > MAX && v2 !== CAPOT)) {
-            triggerError(v1 > MAX ? in1 : in2);
-            return;
+            triggerError(v1 > MAX ? in1 : in2); return;
         }
         if (in1.value === "" && in2.value === "") return;
         
@@ -191,19 +192,16 @@
         chk1.checked = false; chk2.checked = false;
         saveToLocal();
 
-        // SCROLL VERS LE HAUT
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        if ("vibrate" in navigator) navigator.vibrate([20, 50, 20]);
-        
         checkWin();
     }
 
     function checkWin() {
         if (g1 >= GOAL || g2 >= GOAL) {
             const winner = g1 >= GOAL ? name1.textContent : name2.textContent;
-            document.getElementById('winner-text').innerHTML = `${winner}<br>GAGNE !`;
+            document.getElementById('winner-text').innerHTML = `${winner}`;
             overlay.style.display = 'flex';
+            appBody.classList.add('blur-active');
             if ("vibrate" in navigator) navigator.vibrate([100, 50, 100, 50, 300]);
         }
     }
@@ -216,7 +214,11 @@
         document.getElementById('fill1').style.width = Math.min(100, (g1/GOAL)*100) + "%";
         document.getElementById('fill2').style.width = Math.min(100, (g2/GOAL)*100) + "%";
         
-        updateBanner();
+        const diff = Math.abs(g1 - g2);
+        const n1 = name1.textContent || "NOUS", n2 = name2.textContent || "EUX";
+        if (g1 === 0 && g2 === 0) banner.textContent = "Partie sécurisée ✅";
+        else banner.innerHTML = `Écart : <b>${diff} pts</b> (${g1 > g2 ? n1 : n2} mène)`;
+
         const hUI = document.getElementById('history');
         hUI.innerHTML = '';
         [...log].reverse().forEach(r => {
@@ -228,74 +230,53 @@
         document.getElementById('undoBtn').disabled = log.length === 0;
     }
 
-    function updateBanner() {
-        const diff = Math.abs(g1 - g2);
-        const n1 = name1.textContent || "NOUS";
-        const n2 = name2.textContent || "EUX";
-        if (g1 === 0 && g2 === 0) banner.textContent = "Partie sécurisée ✅";
-        else if (g1 === g2) banner.textContent = "Égalité !";
-        else banner.innerHTML = `Écart : <b>${diff} pts</b> (${g1 > g2 ? n1 + ' devant' : n2 + ' devant'})`;
-    }
-
     function reset() { 
-        if(confirm("Effacer les scores et recommencer ?")) { 
+        if(confirm("Démarrer une nouvelle partie ?")) { 
             g1 = 0; g2 = 0; log = []; 
             overlay.style.display = 'none';
+            appBody.classList.remove('blur-active');
             updateUI(); 
             localStorage.removeItem('belote_save');
         } 
     }
 
-    // --- SYSTEME SAUVEGARDE & AUTO-FILLS ---
-    function saveToLocal() {
-        const data = { g1, g2, log, n1: name1.textContent, n2: name2.textContent };
-        localStorage.setItem('belote_save', JSON.stringify(data));
-    }
-
-    function updateLabels() {
+    // Sauvegarde & Dynamique
+    function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
+    function updateLabels() { 
         document.getElementById('label-name1').textContent = "SCORE " + name1.textContent;
         document.getElementById('label-name2').textContent = "SCORE " + name2.textContent;
-        updateBanner(); saveToLocal();
+        saveToLocal(); 
     }
-
     name1.addEventListener('input', updateLabels);
     name2.addEventListener('input', updateLabels);
 
-    in1.addEventListener('input', (e) => {
+    in1.addEventListener('input', () => {
         let v = parseInt(in1.value);
-        if(!isNaN(v) && v <= MAX) { in2.value = (v === CAPOT) ? 0 : MAX - v; updateBanner(); }
+        if(!isNaN(v) && v <= MAX) in2.value = (v === CAPOT) ? 0 : MAX - v;
     });
-    in2.addEventListener('input', (e) => {
+    in2.addEventListener('input', () => {
         let v = parseInt(in2.value);
-        if(!isNaN(v) && v <= MAX) { in1.value = (v === CAPOT) ? 0 : MAX - v; updateBanner(); }
+        if(!isNaN(v) && v <= MAX) in1.value = (v === CAPOT) ? 0 : MAX - v;
     });
 
     [in1, in2].forEach(input => {
-        input.addEventListener('focus', function() { setTimeout(() => { this.select(); }, 50); });
+        input.addEventListener('focus', function() { setTimeout(() => this.select(), 50); });
         input.addEventListener('click', function() { this.select(); });
     });
 
     function setCapot(t) {
         if(t===1) { in1.value = CAPOT; in2.value = 0; }
         else { in1.value = 0; in2.value = CAPOT; }
-        updateBanner();
+        if ("vibrate" in navigator) navigator.vibrate(20);
     }
 
-    function undo() { 
-        if (log.length) { 
-            log.pop(); 
-            g1 = log.reduce((a, b) => a + b.v1, 0); 
-            g2 = log.reduce((a, b) => a + b.v2, 0); 
-            updateUI(); saveToLocal();
-        } 
-    }
+    function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); updateUI(); saveToLocal(); } }
 
     window.onload = () => {
         const saved = localStorage.getItem('belote_save');
         if (saved) {
-            const data = JSON.parse(saved);
-            g1 = data.g1; g2 = data.g2; log = data.log;
-            name1.textContent = data.n1; name2.textContent = data.n2;
+            const d = JSON.parse(saved); g1 = d.g1; g2 = d.g2; log = d.log;
+            name1.textContent = d.n1; name2.textContent = d.n2;
             updateUI(); updateLabels();
         }
     };
