@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Party - Perso</title>
+    <title>Belote Party - Session Sécurisée</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -15,8 +15,17 @@
             --text-main: #2d3436;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #f0f2f5; color: var(--text-main); padding: 10px; display: flex; justify-content: center; min-height: 100vh; }
+        /* SOLUTION 3 : Bloque le rechargement par glissement vers le bas sur mobile */
+        html, body { 
+            overscroll-behavior-y: contain; 
+            margin: 0; 
+            padding: 0;
+            background: #f0f2f5; 
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { padding: 10px; display: flex; justify-content: center; min-height: 100vh; }
 
         .app-container {
             width: 100%; max-width: 450px; background: white; border-radius: 30px;
@@ -26,21 +35,11 @@
         header { padding: 30px 20px; background: var(--bg-light); border-bottom: 2px solid #f1f2f6; }
         .scores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* NOMS EDITABLES */
         .team-title { 
-            font-size: 0.85rem; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            margin-bottom: 8px; 
-            color: #b2bec3; 
-            text-align: center;
-            border-bottom: 1px dashed #dfe6e9;
-            padding-bottom: 2px;
-            outline: none;
-            cursor: edit;
+            font-size: 0.85rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; 
+            margin-bottom: 8px; color: #b2bec3; text-align: center;
+            border-bottom: 1px dashed #dfe6e9; outline: none;
         }
-        .team-title:focus { color: var(--text-main); border-bottom: 2px solid #74b9ff; }
 
         .score-val { font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 12px; text-align: center;}
         #t1 { color: #0984e3; }
@@ -61,10 +60,7 @@
         .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .label-row label { font-size: 0.65rem; font-weight: 800; color: #b2bec3; }
 
-        .capot-btn { 
-            background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; 
-            color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; 
-        }
+        .capot-btn { background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
 
         input[type="number"] {
             width: 100%; padding: 15px; border: 3px solid #f1f2f6; border-radius: 20px;
@@ -107,12 +103,18 @@
         </div>
     </header>
 
-    <div class="info-banner" id="diff-text">Bonne partie !</div>
+    <div class="info-banner" id="diff-text">Partie sécurisée ✅</div>
 
     <div class="controls">
         <div class="input-row">
-            <div class="input-box"><div class="label-row"><label id="label-name1">SCORE NOUS</label><button class="capot-btn" onclick="setCapot(1)">CAPOT</button></div><input type="number" id="s1" placeholder="0" inputmode="numeric"></div>
-            <div class="input-box"><div class="label-row"><label id="label-name2">SCORE EUX</label><button class="capot-btn" onclick="setCapot(2)">CAPOT</button></div><input type="number" id="s2" placeholder="0" inputmode="numeric"></div>
+            <div class="input-box">
+                <div class="label-row"><label id="label-name1">SCORE NOUS</label><button class="capot-btn" onclick="setCapot(1)">CAPOT</button></div>
+                <input type="number" id="s1" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="input-box">
+                <div class="label-row"><label id="label-name2">SCORE EUX</label><button class="capot-btn" onclick="setCapot(2)">CAPOT</button></div>
+                <input type="number" id="s2" placeholder="0" inputmode="numeric">
+            </div>
         </div>
         <div class="belote-row">
             <label class="belote-opt"><input type="checkbox" id="b1"> Belote</label>
@@ -137,12 +139,39 @@
     const name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
     const banner = document.getElementById('diff-text');
 
-    // Mise à jour dynamique des labels de saisie quand on change les noms
+/*     // --- SOLUTION 1 : Sauvegarde locale ---
+    function saveToLocal() {
+        const data = { g1, g2, log, n1: name1.textContent, n2: name2.textContent };
+        localStorage.setItem('belote_save', JSON.stringify(data));
+    }
+
+    function loadFromLocal() {
+        const saved = localStorage.getItem('belote_save');
+        if (saved) {
+            const data = JSON.parse(saved);
+            g1 = data.g1; g2 = data.g2; log = data.log;
+            name1.textContent = data.n1 || "NOUS"; 
+            name2.textContent = data.n2 || "EUX";
+            updateUI();
+            updateLabels();
+        }
+    }
+ */
+    // --- SOLUTION 2 : Alerte de sortie si partie en cours ---
+    window.addEventListener('beforeunload', (event) => {
+        if (log.length > 0) {
+            event.preventDefault();
+            event.returnValue = ''; // Requis pour Chrome
+        }
+    });
+
     function updateLabels() {
         document.getElementById('label-name1').textContent = "SCORE " + name1.textContent;
         document.getElementById('label-name2').textContent = "SCORE " + name2.textContent;
         updateBanner();
+        saveToLocal();
     }
+
     name1.addEventListener('input', updateLabels);
     name2.addEventListener('input', updateLabels);
 
@@ -179,22 +208,25 @@
         if ((v1 > MAX && v1 !== CAPOT) || (v2 > MAX && v2 !== CAPOT)) return;
         if (in1.value === "" && in2.value === "") return;
         if(chk1.checked) v1 += 20; if(chk2.checked) v2 += 20;
+        
         log.push({v1, v2});
         g1 += v1; g2 += v2;
-        update();
+        updateUI();
         in1.value = ""; in2.value = ""; 
         chk1.checked = false; chk2.checked = false;
+        saveToLocal();
     }
 
     function updateBanner() {
         const diff = Math.abs(g1 - g2);
         const n1 = name1.textContent || "NOUS";
         const n2 = name2.textContent || "EUX";
-        if (g1 === g2) banner.textContent = "Égalité !";
+        if (g1 === 0 && g2 === 0) banner.textContent = "Partie sécurisée ✅";
+        else if (g1 === g2) banner.textContent = "Égalité !";
         else banner.innerHTML = `Écart : <b>${diff} pts</b> (${g1 > g2 ? n1 + ' devant' : n2 + ' devant'})`;
     }
 
-    function update() {
+    function updateUI() {
         document.getElementById('t1').textContent = g1;
         document.getElementById('t2').textContent = g2;
         document.getElementById('rem1').textContent = Math.max(0, GOAL - g1) + " restants";
@@ -213,8 +245,25 @@
         document.getElementById('undoBtn').disabled = log.length === 0;
     }
 
-    function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); update(); } }
-    function reset() { if(confirm("Effacer les scores ?")) { g1 = 0; g2 = 0; log = []; update(); } }
+    function undo() { 
+        if (log.length) { 
+            log.pop(); 
+            g1 = log.reduce((a, b) => a + b.v1, 0); 
+            g2 = log.reduce((a, b) => a + b.v2, 0); 
+            updateUI(); 
+            saveToLocal();
+        } 
+    }
+
+    function reset() { 
+        if(confirm("Effacer les scores et recommencer ?")) { 
+            g1 = 0; g2 = 0; log = []; 
+            updateUI(); 
+            localStorage.removeItem('belote_save');
+        } 
+    }
+
+    window.onload = loadFromLocal;
 </script>
 </body>
 </html>
