@@ -139,7 +139,7 @@
     const name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
     const banner = document.getElementById('diff-text');
 
-/*     // --- SOLUTION 1 : Sauvegarde locale ---
+// --- SOLUTION 1 : Sauvegarde locale ---
     function saveToLocal() {
         const data = { g1, g2, log, n1: name1.textContent, n2: name2.textContent };
         localStorage.setItem('belote_save', JSON.stringify(data));
@@ -156,7 +156,7 @@
             updateLabels();
         }
     }
- */
+ 
     // --- SOLUTION 2 : Alerte de sortie si partie en cours ---
     window.addEventListener('beforeunload', (event) => {
         if (log.length > 0) {
