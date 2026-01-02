@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote</title>
+    <title>Belote Party - Contrôle Saisie</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -63,21 +63,11 @@
         .label-row label { font-size: 0.65rem; font-weight: 800; color: #b2bec3; }
         .capot-btn { background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
 
-        /* NOUVEAU POSITIONNEMENT : Au-dessus de l'input */
         .belote-badge {
-            position: absolute;
-            bottom: -5px; /* Aligné juste au dessus de la bordure de l'input */
-            left: 50%;
-            transform: translateX(-50%) scale(0);
-            background: var(--success-color);
-            color: white;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 900;
-            white-space: nowrap;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
+            position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) scale(0);
+            background: var(--success-color); color: white; padding: 2px 10px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: 900; white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .belote-badge.show { transform: translateX(-50%) scale(1); bottom: -12px; }
@@ -94,6 +84,10 @@
             transition: all 0.2s; -webkit-appearance: none; background: #fff;
         }
         input[type="number"]:focus { border-color: #74b9ff; outline: none; transform: scale(1.15); }
+        
+        /* Classe d'erreur temps réel */
+        .live-error { border-color: var(--error-color) !important; color: var(--error-color) !important; }
+        
         .input-error { border-color: var(--error-color) !important; color: var(--error-color); animation: shake 0.3s; }
 
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
@@ -202,10 +196,17 @@
     function updateMentions(team) {
         if (team === 1 && chk1.checked) chk2.checked = false;
         if (team === 2 && chk2.checked) chk1.checked = false;
+        
+        let v1 = parseInt(in1.value), v2 = parseInt(in2.value);
+
+        // SIGNALEMENT ERREUR TEMPS RÉEL (Contrôle visuel au remplissage)
+        in1.classList.toggle('live-error', v1 > MAX && v1 !== CAPOT);
+        in2.classList.toggle('live-error', v2 > MAX && v2 !== CAPOT);
+
         document.getElementById('tag1').classList.toggle('show', chk1.checked);
         document.getElementById('tag2').classList.toggle('show', chk2.checked);
-        document.getElementById('cm1').classList.toggle('show', parseInt(in1.value) === CAPOT);
-        document.getElementById('cm2').classList.toggle('show', parseInt(in2.value) === CAPOT);
+        document.getElementById('cm1').classList.toggle('show', v1 === CAPOT);
+        document.getElementById('cm2').classList.toggle('show', v2 === CAPOT);
     }
 
     in1.addEventListener('input', () => { 
@@ -223,11 +224,14 @@
     function addRound() {
         let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
         if (![v1, v2].includes(CAPOT) && (v1 + v2 !== MAX)) { triggerError(v1 > v2 ? in1 : in2); return; }
+        
         let b1 = chk1.checked ? 20 : 0, b2 = chk2.checked ? 20 : 0;
         log.push({v1: v1 + b1, v2: v2 + b2, isCapot: v1 === CAPOT || v2 === CAPOT});
         g1 += (v1 + b1); g2 += (v2 + b2);
+        
         updateUI();
         in1.value = ""; in2.value = ""; chk1.checked = false; chk2.checked = false;
+        in1.classList.remove('live-error'); in2.classList.remove('live-error');
         updateMentions();
         saveToLocal();
         window.scrollTo({ top: 0, behavior: 'smooth' });
