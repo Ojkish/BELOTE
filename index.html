@@ -85,10 +85,7 @@
         }
         input[type="number"]:focus { border-color: #74b9ff; outline: none; transform: scale(1.15); }
         
-        /* État d'erreur persistant (Rouge) */
         .input-error-state { border-color: var(--error-color) !important; color: var(--error-color) !important; }
-
-        /* Animation de vibration ponctuelle */
         .shake-anim { animation: shake 0.4s ease-in-out; }
 
         @keyframes shake { 
@@ -162,8 +159,8 @@
                 </div>
             </div>
             <div class="belote-row">
-                <label class="belote-opt"><input type="checkbox" id="b1" onclick="updateMentions(1)"> Belote</label>
-                <label class="belote-opt"><input type="checkbox" id="b2" onclick="updateMentions(2)"> Belote</label>
+                <label class="belote-opt"><input type="checkbox" id="b1" onclick="toggleBelote(1)"> Belote</label>
+                <label class="belote-opt"><input type="checkbox" id="b2" onclick="toggleBelote(2)"> Belote</label>
             </div>
         </div>
 
@@ -205,10 +202,15 @@
         setTimeout(() => el.classList.remove('shake-anim'), 400);
     }
 
+    // NOUVELLE LOGIQUE : Une seule belote à la fois
+    function toggleBelote(team) {
+        if (team === 1 && chk1.checked) chk2.checked = false;
+        if (team === 2 && chk2.checked) chk1.checked = false;
+        updateMentions();
+    }
+
     function updateMentions() {
         let v1 = parseInt(in1.value), v2 = parseInt(in2.value);
-        
-        // GESTION ERREUR PERSISTANTE + SHAKE
         const isErr1 = v1 > MAX && v1 !== CAPOT;
         const isErr2 = v2 > MAX && v2 !== CAPOT;
 
