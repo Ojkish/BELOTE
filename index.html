@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Party - Indicateurs</title>
+    <title>Belote</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -43,17 +43,13 @@
         #fill2 { background: var(--eux-grad); }
         .remaining { font-size: 0.75rem; margin-top: 10px; font-weight: 700; color: #636e72; text-align: center;}
 
-
-
-        #winner-name {
-        text-transform: uppercase;
-        }
         #victory-banner {
             display: none; background: #e6fffb; border-bottom: 2px solid #b7eb8f;
             padding: 25px; text-align: center; animation: slideDown 0.4s ease-out;
         }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .vic-txt { color: var(--success-color); font-weight: 900; font-size: 1.8rem; line-height: 1.2; margin-bottom: 15px; }
+        .vic-txt { color: var(--success-color); font-weight: 900; font-size: 1.4rem; line-height: 1.2; margin-bottom: 15px; }
+        #winner-name { text-transform: uppercase; }
 
         .info-banner { background: #f9f9f9; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: 600; color: #636e72; }
 
@@ -64,7 +60,6 @@
         .label-row label { font-size: 0.65rem; font-weight: 800; color: #b2bec3; }
         .capot-btn { background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
 
-        /* INDICATEURS DYNAMIQUES */
         .bonus-tag { 
             position: absolute; right: 10px; top: 45px; 
             background: var(--success-color); color: white; 
@@ -171,20 +166,22 @@
     const chk1 = document.getElementById('b1'), chk2 = document.getElementById('b2');
     const name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
 
+    // AJOUT TOUCHE ENTER
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            if (document.getElementById('input-zone').style.display !== 'none') {
+                addRound();
+            }
+        }
+    });
+
     function updateMentions(team) {
-        // Exclusion mutuelle Belote
         if (team === 1 && chk1.checked) chk2.checked = false;
         if (team === 2 && chk2.checked) chk1.checked = false;
-        
-        // Affichage pastille +20
         document.getElementById('tag1').classList.toggle('show', chk1.checked);
         document.getElementById('tag2').classList.toggle('show', chk2.checked);
-        
-        // Affichage mention CAPOT
         document.getElementById('cm1').classList.toggle('show', parseInt(in1.value) === CAPOT);
         document.getElementById('cm2').classList.toggle('show', parseInt(in2.value) === CAPOT);
-        
-        if ("vibrate" in navigator) navigator.vibrate(10);
     }
 
     in1.addEventListener('input', () => { 
@@ -222,24 +219,18 @@
         document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " restants";
         document.getElementById('fill1').style.width = Math.min(100, (g1/GOAL)*100) + "%";
         document.getElementById('fill2').style.width = Math.min(100, (g2/GOAL)*100) + "%";
-        
         const diff = Math.abs(g1 - g2);
-        document.getElementById('diff-text').innerHTML = (g1 === 0 && g2 === 0) ? "Prêt pour la donne ?" : `Écart : <b>${diff} pts</b>`;
+        document.getElementById('diff-text').innerHTML = (g1 === 0 && g2 === 0) ? "Prêt ?" : `Écart : <b>${diff} pts</b>`;
 
         const hUI = document.getElementById('history');
         hUI.innerHTML = '';
         [...log].reverse().forEach(r => {
             const li = document.createElement('li'); li.className = 'history-item';
-            const capotTag = r.isCapot ? " <small style='color:#f39c12;font-size:0.6rem'>(CAPOT)</small>" : "";
-            li.innerHTML = `<span>+${r.v1}</span><span>|</span><span>+${r.v2}${capotTag}</span>`;
+            const cp = r.isCapot ? " <small style='color:#f39c12'>(CAPOT)</small>" : "";
+            li.innerHTML = `<span>+${r.v1}</span><span>|</span><span>+${r.v2}${cp}</span>`;
             hUI.appendChild(li);
         });
         document.getElementById('undoBtn').disabled = log.length === 0;
-    }
-
-    function setCapot(t) { 
-        if(t===1) { in1.value = 252; in2.value = 0; } else { in1.value = 0; in2.value = 252; } 
-        updateMentions();
     }
 
     function checkWin() {
@@ -251,7 +242,7 @@
     }
 
     function reset() {
-        if(confirm("Démarrer une nouvelle partie ?")) {
+        if(confirm("Recommencer ?")) {
             g1 = 0; g2 = 0; log = [];
             document.getElementById('victory-banner').style.display = 'none';
             document.getElementById('input-zone').style.display = 'block';
@@ -261,6 +252,7 @@
 
     function triggerError(el) { el.classList.add('input-error'); setTimeout(() => el.classList.remove('input-error'), 400); }
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
+    function setCapot(t) { if(t===1) { in1.value = 252; in2.value = 0; } else { in1.value = 0; in2.value = 252; } updateMentions(); }
     function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); updateUI(); saveToLocal(); } }
 
     window.onload = () => {
@@ -271,7 +263,6 @@
             updateUI(); checkWin();
         }
     };
-    [in1, in2].forEach(i => i.addEventListener('focus', function() { setTimeout(() => this.select(), 50); }));
 </script>
 </body>
 </html>
