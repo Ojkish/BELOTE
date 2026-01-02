@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Belote Party - Contrôle Saisie</title>
+    <title>Belote</title>
     <style>
         :root {
             --nous-color: #00d2ff;
@@ -85,12 +85,19 @@
         }
         input[type="number"]:focus { border-color: #74b9ff; outline: none; transform: scale(1.15); }
         
-        /* Classe d'erreur temps réel */
-        .live-error { border-color: var(--error-color) !important; color: var(--error-color) !important; }
-        
-        .input-error { border-color: var(--error-color) !important; color: var(--error-color); animation: shake 0.3s; }
+        /* État d'erreur persistant (Rouge) */
+        .input-error-state { border-color: var(--error-color) !important; color: var(--error-color) !important; }
 
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+        /* Animation de vibration ponctuelle */
+        .shake-anim { animation: shake 0.4s ease-in-out; }
+
+        @keyframes shake { 
+            0%, 100% { transform: scale(1.1) translateX(0); } 
+            20% { transform: scale(1.1) translateX(-8px); } 
+            40% { transform: scale(1.1) translateX(8px); } 
+            60% { transform: scale(1.1) translateX(-8px); } 
+            80% { transform: scale(1.1) translateX(8px); } 
+        }
 
         .belote-row { display: flex; justify-content: space-around; margin: 15px 0 25px; }
         .belote-opt { display: flex; align-items: center; gap: 10px; font-weight: 800; color: #636e72; cursor: pointer; }
@@ -193,15 +200,23 @@
         }
     });
 
-    function updateMentions(team) {
-        if (team === 1 && chk1.checked) chk2.checked = false;
-        if (team === 2 && chk2.checked) chk1.checked = false;
-        
-        let v1 = parseInt(in1.value), v2 = parseInt(in2.value);
+    function handleShake(el) {
+        el.classList.add('shake-anim');
+        setTimeout(() => el.classList.remove('shake-anim'), 400);
+    }
 
-        // SIGNALEMENT ERREUR TEMPS RÉEL (Contrôle visuel au remplissage)
-        in1.classList.toggle('live-error', v1 > MAX && v1 !== CAPOT);
-        in2.classList.toggle('live-error', v2 > MAX && v2 !== CAPOT);
+    function updateMentions() {
+        let v1 = parseInt(in1.value), v2 = parseInt(in2.value);
+        
+        // GESTION ERREUR PERSISTANTE + SHAKE
+        const isErr1 = v1 > MAX && v1 !== CAPOT;
+        const isErr2 = v2 > MAX && v2 !== CAPOT;
+
+        if (isErr1 && !in1.classList.contains('input-error-state')) handleShake(in1);
+        if (isErr2 && !in2.classList.contains('input-error-state')) handleShake(in2);
+
+        in1.classList.toggle('input-error-state', isErr1);
+        in2.classList.toggle('input-error-state', isErr2);
 
         document.getElementById('tag1').classList.toggle('show', chk1.checked);
         document.getElementById('tag2').classList.toggle('show', chk2.checked);
@@ -223,7 +238,10 @@
 
     function addRound() {
         let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
-        if (![v1, v2].includes(CAPOT) && (v1 + v2 !== MAX)) { triggerError(v1 > v2 ? in1 : in2); return; }
+        if (![v1, v2].includes(CAPOT) && (v1 + v2 !== MAX)) { 
+            handleShake(v1 > v2 ? in1 : in2); 
+            return; 
+        }
         
         let b1 = chk1.checked ? 20 : 0, b2 = chk2.checked ? 20 : 0;
         log.push({v1: v1 + b1, v2: v2 + b2, isCapot: v1 === CAPOT || v2 === CAPOT});
@@ -231,7 +249,7 @@
         
         updateUI();
         in1.value = ""; in2.value = ""; chk1.checked = false; chk2.checked = false;
-        in1.classList.remove('live-error'); in2.classList.remove('live-error');
+        in1.classList.remove('input-error-state'); in2.classList.remove('input-error-state');
         updateMentions();
         saveToLocal();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -275,7 +293,6 @@
         }
     }
 
-    function triggerError(el) { el.classList.add('input-error'); setTimeout(() => el.classList.remove('input-error'), 400); }
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
     function setCapot(t) { if(t===1) { in1.value = 252; in2.value = 0; } else { in1.value = 0; in2.value = 252; } updateMentions(); }
     function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); updateUI(); saveToLocal(); } }
