@@ -202,7 +202,6 @@
         setTimeout(() => el.classList.remove('shake-anim'), 400);
     }
 
-    // NOUVELLE LOGIQUE : Une seule belote à la fois
     function toggleBelote(team) {
         if (team === 1 && chk1.checked) chk2.checked = false;
         if (team === 2 && chk2.checked) chk1.checked = false;
@@ -286,8 +285,20 @@
         }
     }
 
+    function undo() { 
+        if (log.length) { 
+            if(confirm("Annuler la dernière donne enregistrée ?")) {
+                log.pop(); 
+                g1 = log.reduce((a, b) => a + b.v1, 0); 
+                g2 = log.reduce((a, b) => a + b.v2, 0); 
+                updateUI(); 
+                saveToLocal(); 
+            }
+        } 
+    }
+
     function reset() {
-        if(confirm("Recommencer ?")) {
+        if(confirm("Recommencer une nouvelle partie à zéro ?")) {
             g1 = 0; g2 = 0; log = [];
             document.getElementById('victory-banner').style.display = 'none';
             document.getElementById('input-zone').style.display = 'block';
@@ -297,7 +308,6 @@
 
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
     function setCapot(t) { if(t===1) { in1.value = 252; in2.value = 0; } else { in1.value = 0; in2.value = 252; } updateMentions(); }
-    function undo() { if (log.length) { log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); updateUI(); saveToLocal(); } }
 
     window.onload = () => {
         const saved = localStorage.getItem('belote_save');
