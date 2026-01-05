@@ -120,7 +120,6 @@
         .history-item .val-right { text-align: center; color: var(--eux-color); }
         .cap-tag { display: block; font-size: 0.55rem; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; margin-top: -2px;}
 
-        /* NOUVEAU STYLE POUR LES ALERTES */
         #custom-alert {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(45, 52, 54, 0.8); z-index: 1000; align-items: center; justify-content: center;
@@ -201,15 +200,17 @@
                 <label class="belote-opt"><input type="checkbox" id="b1" onclick="toggleBelote(1)"> Belote</label>
                 <label class="belote-opt"><input type="checkbox" id="b2" onclick="toggleBelote(2)"> Belote</label>
             </div>
-        </div>
-
-        <div class="btn-group">
-            <button class="btn-undo" onclick="showAlert('Effacer la dernière donne ?', undoAction)" id="undoBtn" disabled>↩</button>
-            <button class="btn-main" onclick="addRound()">Valider la donne</button>
+            <button class="btn-main" onclick="addRound()" style="width:100%">Valider la donne</button>
         </div>
     </div>
 
-    <button class="btn-reset" onclick="showAlert('Tout remettre à zéro ?', resetAction)">REPRENDRE À ZÉRO</button>
+    <div style="padding: 0 20px 20px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 10px;">
+            <button class="btn-undo" onclick="showAlert('Effacer la dernière donne ?', undoAction)" id="undoBtn" disabled style="padding: 15px;">↩</button>
+            <button class="btn-reset" onclick="showAlert('Tout remettre à zéro ?', resetAction)" style="flex: 2; background: #f1f2f6; border-radius: 18px;">REPRENDRE À ZÉRO</button>
+        </div>
+    </div>
+
     <ul class="history-list" id="history"></ul>
 </div>
 
@@ -316,19 +317,26 @@
             document.getElementById('winner-name').textContent = g1 >= GOAL ? name1.textContent : name2.textContent;
             document.getElementById('victory-banner').style.display = 'block';
             document.getElementById('input-zone').style.display = 'none';
+        } else {
+            document.getElementById('victory-banner').style.display = 'none';
+            document.getElementById('input-zone').style.display = 'block';
         }
     }
 
     function undoAction() { 
-        log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); 
-        updateUI(); saveToLocal(); 
+        log.pop(); 
+        g1 = log.reduce((a, b) => a + b.v1, 0); 
+        g2 = log.reduce((a, b) => a + b.v2, 0); 
+        updateUI(); 
+        saveToLocal();
+        checkWin(); // Pour réafficher le clavier si on annule la victoire
     }
 
     function resetAction() {
         g1 = 0; g2 = 0; log = [];
-        document.getElementById('victory-banner').style.display = 'none';
-        document.getElementById('input-zone').style.display = 'block';
-        updateUI(); saveToLocal();
+        updateUI(); 
+        saveToLocal();
+        checkWin();
     }
 
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
