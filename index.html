@@ -286,6 +286,10 @@
         let b1 = chk1.checked ? 20 : 0, b2 = chk2.checked ? 20 : 0;
         log.push({v1: v1 + b1, v2: v2 + b2, isCapot: v1 === CAPOT || v2 === CAPOT});
         g1 += (v1 + b1); g2 += (v2 + b2);
+        
+        // REMONTÉE AUTOMATIQUE ICI
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         updateUI();
         in1.value = ""; in2.value = ""; chk1.checked = false; chk2.checked = false;
         updateMentions(); saveToLocal(); checkWin();
@@ -329,7 +333,7 @@
         g2 = log.reduce((a, b) => a + b.v2, 0); 
         updateUI(); 
         saveToLocal();
-        checkWin(); // Pour réafficher le clavier si on annule la victoire
+        checkWin();
     }
 
     function resetAction() {
