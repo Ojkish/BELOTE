@@ -37,14 +37,9 @@
         }
 
         .score-val { 
-            font-size: 4rem; 
-            font-weight: 900; 
-            line-height: 0.9; 
-            margin-bottom: 15px; 
-            text-align: center;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            letter-spacing: -2px;
+            font-size: 4rem; font-weight: 900; line-height: 0.9; margin-bottom: 15px; 
+            text-align: center; font-variant-numeric: tabular-nums;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.05); letter-spacing: -2px;
         }
         #t1 { color: var(--nous-color); }
         #t2 { color: var(--eux-color); }
@@ -114,34 +109,46 @@
         .btn-undo { background: #ffeaa7; color: #d6a000; flex: 1; font-size: 1.5rem; border-radius: 18px; border:none; cursor:pointer; }
         .btn-reset { background: none; color: #b2bec3; width: 100%; padding: 15px; font-size: 0.75rem; font-weight: 700; border:none; cursor:pointer;}
         
-        /* ALIGNEMENT CENTRÉ DANS CHAQUE COLONNE */
         .history-list { list-style: none; max-height: 200px; overflow-y: auto; background: #fafbfc; border-top: 1px solid #f1f2f6; padding: 0; }
         .history-item { 
-            display: grid; 
-            grid-template-columns: 1fr auto 1fr; 
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f1f2f6; 
-            font-size: 1.15rem; 
-            font-weight: 700; 
-            font-variant-numeric: tabular-nums;
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            padding: 14px 0; border-bottom: 1px solid #f1f2f6; font-size: 1.15rem; 
+            font-weight: 700; font-variant-numeric: tabular-nums;
         }
         .history-item .val-left { text-align: center; color: var(--nous-color); }
         .history-item .divider { color: #dfe6e9; font-weight: 300; opacity: 0.6; }
         .history-item .val-right { text-align: center; color: var(--eux-color); }
-        
-        /* TAG CAPOT AJUSTÉ POUR NE PAS DÉCENTRER LE CHIFFRE */
-        .cap-tag { 
-            display: block; 
-            font-size: 0.55rem; 
-            color: #f39c12; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            margin-top: -2px;
+        .cap-tag { display: block; font-size: 0.55rem; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; margin-top: -2px;}
+
+        /* NOUVEAU STYLE POUR LES ALERTES */
+        #custom-alert {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(45, 52, 54, 0.8); z-index: 1000; align-items: center; justify-content: center;
+            padding: 20px; backdrop-filter: blur(4px);
         }
+        .alert-box {
+            background: white; width: 100%; max-width: 320px; border-radius: 25px;
+            padding: 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .alert-msg { font-weight: 700; color: var(--text-main); margin-bottom: 25px; line-height: 1.4; font-size: 1.1rem; }
+        .alert-btns { display: flex; gap: 10px; }
+        .btn-confirm { background: var(--error-color); color: white; flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; }
+        .btn-cancel { background: #f1f2f6; color: #636e72; flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; }
     </style>
 </head>
 <body>
+
+<div id="custom-alert">
+    <div class="alert-box">
+        <div class="alert-msg" id="alert-msg">Message ?</div>
+        <div class="alert-btns">
+            <button class="btn-cancel" onclick="closeAlert(false)">ANNULER</button>
+            <button class="btn-confirm" id="confirm-btn">OUI</button>
+        </div>
+    </div>
+</div>
 
 <div class="app-container">
     <header>
@@ -197,12 +204,12 @@
         </div>
 
         <div class="btn-group">
-            <button class="btn-undo" onclick="undo()" id="undoBtn" disabled>↩</button>
+            <button class="btn-undo" onclick="showAlert('Effacer la dernière donne ?', undoAction)" id="undoBtn" disabled>↩</button>
             <button class="btn-main" onclick="addRound()">Valider la donne</button>
         </div>
     </div>
 
-    <button class="btn-reset" onclick="reset()">REPRENDRE À ZÉRO</button>
+    <button class="btn-reset" onclick="showAlert('Tout remettre à zéro ?', resetAction)">REPRENDRE À ZÉRO</button>
     <ul class="history-list" id="history"></ul>
 </div>
 
@@ -213,20 +220,26 @@
     const chk1 = document.getElementById('b1'), chk2 = document.getElementById('b2');
     const name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
 
+    function showAlert(msg, callback) {
+        document.getElementById('alert-msg').textContent = msg;
+        document.getElementById('custom-alert').style.display = 'flex';
+        document.getElementById('confirm-btn').onclick = () => {
+            callback();
+            closeAlert();
+        };
+    }
+    function closeAlert() { document.getElementById('custom-alert').style.display = 'none'; }
+
     [in1, in2].forEach(input => {
         input.addEventListener('focus', function() {
             if (this.value === "0") this.value = "";
             setTimeout(() => this.select(), 10);
         });
-        input.addEventListener('blur', function() {
-            if (this.value === "") this.placeholder = "0";
-        });
+        input.addEventListener('blur', function() { if (this.value === "") this.placeholder = "0"; });
     });
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            if (document.getElementById('input-zone').style.display !== 'none') addRound();
-        }
+        if (e.key === 'Enter' && document.getElementById('input-zone').style.display !== 'none') addRound();
     });
 
     function handleShake(el) {
@@ -244,13 +257,10 @@
         let v1 = parseInt(in1.value), v2 = parseInt(in2.value);
         const isErr1 = v1 > MAX && v1 !== CAPOT;
         const isErr2 = v2 > MAX && v2 !== CAPOT;
-
         if (isErr1 && !in1.classList.contains('input-error-state')) handleShake(in1);
         if (isErr2 && !in2.classList.contains('input-error-state')) handleShake(in2);
-
         in1.classList.toggle('input-error-state', isErr1);
         in2.classList.toggle('input-error-state', isErr2);
-
         document.getElementById('tag1').classList.toggle('show', chk1.checked);
         document.getElementById('tag2').classList.toggle('show', chk2.checked);
         document.getElementById('cm1').classList.toggle('show', v1 === CAPOT);
@@ -271,22 +281,13 @@
 
     function addRound() {
         let v1 = parseInt(in1.value) || 0, v2 = parseInt(in2.value) || 0;
-        if (![v1, v2].includes(CAPOT) && (v1 + v2 !== MAX)) { 
-            handleShake(v1 > v2 ? in1 : in2); 
-            return; 
-        }
-        
+        if (![v1, v2].includes(CAPOT) && (v1 + v2 !== MAX)) { handleShake(v1 > v2 ? in1 : in2); return; }
         let b1 = chk1.checked ? 20 : 0, b2 = chk2.checked ? 20 : 0;
         log.push({v1: v1 + b1, v2: v2 + b2, isCapot: v1 === CAPOT || v2 === CAPOT});
         g1 += (v1 + b1); g2 += (v2 + b2);
-        
         updateUI();
         in1.value = ""; in2.value = ""; chk1.checked = false; chk2.checked = false;
-        in1.classList.remove('input-error-state'); in2.classList.remove('input-error-state');
-        updateMentions();
-        saveToLocal();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        checkWin();
+        updateMentions(); saveToLocal(); checkWin();
     }
 
     function updateUI() {
@@ -298,18 +299,13 @@
         document.getElementById('rem2').textContent = Math.max(0, GOAL - g2) + " restants";
         const diff = Math.abs(g1 - g2);
         document.getElementById('diff-text').innerHTML = (g1 === 0 && g2 === 0) ? "Prêt ?" : `Écart : <b>${diff} pts</b>`;
-        
         const hUI = document.getElementById('history');
         hUI.innerHTML = '';
         [...log].reverse().forEach(r => {
             const li = document.createElement('li'); li.className = 'history-item';
             const cpLeft = (r.isCapot && r.v1 > r.v2) ? "<span class='cap-tag'>Capot</span>" : "";
             const cpRight = (r.isCapot && r.v2 > r.v1) ? "<span class='cap-tag'>Capot</span>" : "";
-            li.innerHTML = `
-                <div class="val-left">+${r.v1}${cpLeft}</div>
-                <div class="divider">|</div>
-                <div class="val-right">+${r.v2}${cpRight}</div>
-            `;
+            li.innerHTML = `<div class="val-left">+${r.v1}${cpLeft}</div><div class="divider">|</div><div class="val-right">+${r.v2}${cpRight}</div>`;
             hUI.appendChild(li);
         });
         document.getElementById('undoBtn').disabled = log.length === 0;
@@ -323,25 +319,16 @@
         }
     }
 
-    function undo() { 
-        if (log.length) { 
-            if(confirm("Annuler la dernière donne enregistrée ?")) {
-                log.pop(); 
-                g1 = log.reduce((a, b) => a + b.v1, 0); 
-                g2 = log.reduce((a, b) => a + b.v2, 0); 
-                updateUI(); 
-                saveToLocal(); 
-            }
-        } 
+    function undoAction() { 
+        log.pop(); g1 = log.reduce((a, b) => a + b.v1, 0); g2 = log.reduce((a, b) => a + b.v2, 0); 
+        updateUI(); saveToLocal(); 
     }
 
-    function reset() {
-        if(confirm("Recommencer une nouvelle partie à zéro ?")) {
-            g1 = 0; g2 = 0; log = [];
-            document.getElementById('victory-banner').style.display = 'none';
-            document.getElementById('input-zone').style.display = 'block';
-            updateUI(); saveToLocal();
-        }
+    function resetAction() {
+        g1 = 0; g2 = 0; log = [];
+        document.getElementById('victory-banner').style.display = 'none';
+        document.getElementById('input-zone').style.display = 'block';
+        updateUI(); saveToLocal();
     }
 
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
