@@ -63,9 +63,10 @@
         .controls { padding: 25px 20px; }
         .input-row { display: flex; gap: 20px; margin-bottom: 10px; }
         .input-box { flex: 1; position: relative; }
-        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; position: relative; }
-        .label-row label { font-size: 0.65rem; font-weight: 800; color: #b2bec3; }
-        .capot-btn { background: #f1f2f6; border: none; padding: 6px 10px; border-radius: 8px; color: #636e72; font-size: 0.65rem; font-weight: 800; cursor: pointer; }
+        .label-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 8px; position: relative; gap: 4px; }
+        .label-row label { font-size: 0.65rem; font-weight: 800; color: #black; width: 100%; margin-bottom: 4px; }
+        .capot-btn, .chute-btn { background: #f1f2f6; border: none; padding: 6px 8px; border-radius: 8px; color: #636e72; font-size: 0.6rem; font-weight: 800; cursor: pointer; flex: 1; }
+        .chute-btn { color: var(--error-color); }
 
         .belote-badge {
             position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) scale(0);
@@ -181,6 +182,7 @@
                     <div class="label-row">
                         <label>NOUS</label>
                         <button class="capot-btn" onclick="setCapot(1)">CAPOT</button>
+                        <button class="chute-btn" onclick="setChute(1)">CHUTÉ</button>
                         <div class="belote-badge" id="tag1">+20 Points</div>
                     </div>
                     <input type="number" id="s1" placeholder="0" inputmode="numeric">
@@ -190,6 +192,7 @@
                     <div class="label-row">
                         <label>EUX</label>
                         <button class="capot-btn" onclick="setCapot(2)">CAPOT</button>
+                        <button class="chute-btn" onclick="setChute(2)">CHUTÉ</button>
                         <div class="belote-badge" id="tag2">+20 Points</div>
                     </div>
                     <input type="number" id="s2" placeholder="0" inputmode="numeric">
@@ -287,7 +290,6 @@
         log.push({v1: v1 + b1, v2: v2 + b2, isCapot: v1 === CAPOT || v2 === CAPOT});
         g1 += (v1 + b1); g2 += (v2 + b2);
         
-        // REMONTÉE AUTOMATIQUE ICI
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         updateUI();
@@ -344,7 +346,10 @@
     }
 
     function saveToLocal() { localStorage.setItem('belote_save', JSON.stringify({ g1, g2, log, n1: name1.textContent, n2: name2.textContent })); }
+    
     function setCapot(t) { if(t===1) { in1.value = 252; in2.value = 0; } else { in1.value = 0; in2.value = 252; } updateMentions(); }
+    
+    function setChute(t) { if(t===1) { in1.value = 0; in2.value = 162; } else { in1.value = 162; in2.value = 0; } updateMentions(); }
 
     window.onload = () => {
         const saved = localStorage.getItem('belote_save');
